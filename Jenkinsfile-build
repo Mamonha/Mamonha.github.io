@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+    
+    environment {
+        ACR_REGISTRY = 'deploy-calculeinvest-group'
+        IMAGE_NAME = 'portfolio'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build Docker') {
+            steps {
+                sh """
+                    docker build -t ${ACR_REGISTRY}/${IMAGE_NAME}:${BUILD_ID} .
+                    docker tag ${ACR_REGISTRY}/${IMAGE_NAME}:${BUILD_ID} ${ACR_REGISTRY}/${IMAGE_NAME}:latest
+                """
+            }
+        }
+        
+        stage('Push to ACR') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'acr-credentials',
+                    usernameVariable: 'ACR_USER',
+                    passwordVariable: 'ACR_PASS'
+                )]) {
+                    sh """
+                        docker login ${ACR_REGISTRY} -u ${ACR_USER} -p ${ACR_PASS}
+                        docker push ${ACR_REGISTRY}/${IMAGE_NAME}:${BUILD_ID}
+                        docker push ${ACR_REGISTRY}/${IMAGE_NAME}:latest
+                    """
+                }
+            }
+        }
+    }
+}
