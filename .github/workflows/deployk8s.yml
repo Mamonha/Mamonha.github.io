@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: 'Tag'
+        description: 'Image Tag)'
         required: true
         default: 'latest'
 
@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-
+    
     - uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
@@ -22,9 +22,11 @@ jobs:
         resource-group: 'deploy-calculeinvest-group'
         cluster-name: 'k8s-calculeinvest'
 
-    - uses: azure/aks-set-kubectl@v3
+    - uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
 
-    - name: Update deployment image
+    - name: Deploy application
       run: |
         kubectl set image deployment/portfolio \
           portfolio=calculeinvest.azurecr.io/portfolio:${{ inputs.image_tag }}
