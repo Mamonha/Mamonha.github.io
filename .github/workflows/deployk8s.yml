@@ -1,19 +1,31 @@
-name: Deploy K&s
+name: Deploy K8s
 on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: 'Image Tag'
+        description: 'Tag'
         required: true
         default: 'latest'
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
-    
-    - name: Deploy
+    - uses: actions/checkout@v4
+
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
+    - uses: azure/aks-set-context@v3
+      with:
+        resource-group: 'deploy-calculeinvest-group'
+        cluster-name: 'k8s-calculeinvest'
+
+    - uses: azure/aks-set-kubectl@v3
+
+    - name: Update deployment image
       run: |
-        kubectl set image deployment/portfolio portfolio=calculeinvest.azurecr.io/portfolio:${{ inputs.image_tag }}
+        kubectl set image deployment/portfolio \
+          portfolio=calculeinvest.azurecr.io/portfolio:${{ inputs.image_tag }}
         kubectl rollout status deployment/portfolio --timeout=300s
