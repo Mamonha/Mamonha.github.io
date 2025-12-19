@@ -1,0 +1,22 @@
+name: Build and Push to ACR
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Login to ACR
+      uses: docker/login-action@v2
+      with:
+        registry: calculeinvest.azurecr.io
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+    
+    - name: Build and push
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: |
+          calculeinvest.azurecr.io/portfolio:${{ github.sha }}
+          calculeinvest.azurecr.io/portfolio:latest
