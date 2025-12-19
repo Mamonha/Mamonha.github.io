@@ -1,0 +1,19 @@
+name: Deploy K&s
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image Tag'
+        required: true
+        default: 'latest'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+    
+    - name: Deploy
+      run: |
+        kubectl set image deployment/portfolio portfolio=calculeinvest.azurecr.io/portfolio:${{ inputs.image_tag }}
+        kubectl rollout status deployment/portfolio --timeout=300s
